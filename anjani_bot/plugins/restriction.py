@@ -32,14 +32,14 @@ class Restrictions(plugin.Plugin):
         user, _ = extract_user_and_text(message)
         chat_id = message.chat.id
         if user is None:
-            return await message.reply_text(await self.text(chat_id, "no-kick-user"))
+            return await message.reply_text(await self.bot.text(chat_id, "no-kick-user"))
         try:
-            if await user_ban_protected(self, chat_id, user):
-                return await message.reply_text(await self.text(chat_id, "admin-kick"))
+            if await user_ban_protected(self.bot, chat_id, user):
+                return await message.reply_text(await self.bot.text(chat_id, "admin-kick"))
         except UserNotParticipant:
-            return await message.reply_text(await self.text(chat_id, "err-not-participant"))
+            return await message.reply_text(await self.bot.text(chat_id, "err-not-participant"))
         await message.chat.kick_member(user)
-        await message.reply_text(await self.text(chat_id, "kick-done"))
+        await message.reply_text(await self.bot.text(chat_id, "kick-done"))
         await message.chat.unban_member(user)
 
     @anjani.on_command("ban", can_restrict=True)
@@ -48,20 +48,20 @@ class Restrictions(plugin.Plugin):
         user, _ = extract_user_and_text(message)
         chat_id = message.chat.id
         if user is None:
-            return await message.reply_text(await self.text(chat_id, "no-ban-user"))
+            return await message.reply_text(await self.bot.text(chat_id, "no-ban-user"))
         try:
-            if await user_ban_protected(self, chat_id, user):
-                return await message.reply_text(await self.text(chat_id, "admin-ban"))
+            if await user_ban_protected(self.bot, chat_id, user):
+                return await message.reply_text(await self.bot.text(chat_id, "admin-ban"))
         except UserNotParticipant:
-            return await message.reply_text(await self.text(chat_id, "err-not-participant"))
+            return await message.reply_text(await self.bot.text(chat_id, "err-not-participant"))
         await message.chat.kick_member(user)
-        await message.reply_text(await self.text(chat_id, "ban-done"))
+        await message.reply_text(await self.bot.text(chat_id, "ban-done"))
 
     @anjani.on_command("unban", can_restrict=True)
     async def unban_member(self, message):
         """ Unban chat member """
         user, _, = extract_user_and_text(message)
         if user is None:
-            return await message.reply_text(await self.text(message.chat.id, "unban-no-user"))
+            return await message.reply_text(await self.bot.text(message.chat.id, "unban-no-user"))
         await message.chat.unban_member(user)
-        await message.reply_text(await self.text(message.chat.id, "unban-done"))
+        await message.reply_text(await self.bot.text(message.chat.id, "unban-done"))

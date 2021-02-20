@@ -34,30 +34,30 @@ class Main(plugin.Plugin):
 
         if message.chat.type == "private":  # only send in PM's
             if message.command and message.command[0] == "help":
-                keyboard = await self.help_builder(chat_id)
+                keyboard = await self.bot.help_builder(chat_id)
                 return await message.reply_text(
-                    await self.text(chat_id, "help-pm", self.name),
+                    await self.bot.text(chat_id, "help-pm", self.bot.name),
                     reply_markup=InlineKeyboardMarkup(keyboard)
                 )
             buttons = [
                 [
                     InlineKeyboardButton(
-                        text=await self.text(chat_id, "add-to-group-button"),
+                        text=await self.bot.text(chat_id, "add-to-group-button"),
                         url=f"t.me/{anjani.username}?startgroup=true"
                     ),
                     InlineKeyboardButton(
-                        text=await self.text(chat_id, "start-help-button"),
+                        text=await self.bot.text(chat_id, "start-help-button"),
                         url=f"t.me/{anjani.username}?start=help",
                     ),
                 ]
             ]
             return await message.reply_text(
-                await self.text(chat_id, "start-pm", self.name),
+                await self.bot.text(chat_id, "start-pm", self.bot.name),
                 reply_markup=InlineKeyboardMarkup(buttons),
                 disable_web_page_preview=True,
                 parse_mode="markdown",
             )
-        return await message.reply_text(await self.text(chat_id, "start-chat"))
+        return await message.reply_text(await self.bot.text(chat_id, "start-chat"))
 
     @anjani.on_command("help")
     async def help(self, message):
@@ -66,21 +66,21 @@ class Main(plugin.Plugin):
 
         if message.chat.type != "private":  # only send in PM's
             return await message.reply_text(
-                await self.text(chat_id, "help-chat"),
+                await self.bot.text(chat_id, "help-chat"),
                 reply_markup=InlineKeyboardMarkup(
                     [
                         [
                             InlineKeyboardButton(
-                                text=await self.text(chat_id, "help-chat-button"),
+                                text=await self.bot.text(chat_id, "help-chat-button"),
                                 url=f"t.me/{anjani.username}?start=help"
                             )
                         ]
                     ]
                 )
             )
-        keyboard = await self.help_builder(chat_id)
+        keyboard = await self.bot.help_builder(chat_id)
         await message.reply_text(
-            await self.text(chat_id, "help-pm", self.name),
+            await self.bot.text(chat_id, "help-pm", self.bot.name),
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -96,21 +96,21 @@ class Main(plugin.Plugin):
             text = (
                 "Here is the help for the **{}** module:\n{}".format(
                     module.capitalize(),
-                    await self.text(chat_id, f"{module}-help")
+                    await self.bot.text(chat_id, f"{module}-help")
                 )
             )
             await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup([[
                     InlineKeyboardButton(
-                        await self.text(chat_id, "back-button"),
+                        await self.bot.text(chat_id, "back-button"),
                         callback_data="help_back"
                     )
                 ]])
             )
         elif back_match:
-            keyboard = await self.help_builder(chat_id)
+            keyboard = await self.bot.help_builder(chat_id)
             await query.edit_message_text(
-                await self.text(chat_id, "help-pm", self.name),
+                await self.bot.text(chat_id, "help-pm", self.bot.name),
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )

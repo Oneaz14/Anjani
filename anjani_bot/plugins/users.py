@@ -29,17 +29,17 @@ class Users(plugin.Plugin):
     lock = asyncio.Lock()
 
     async def __migrate__(self, old_chat, new_chat):
-        async with Users.lock:
-            await Users.users_db.update_many(
+        async with self.lock:
+            await self.users_db.update_many(
                 {'chats': old_chat},
                 {"$push": {'chats': new_chat}},
             )
-            await Users.users_db.update_many(
+            await self.users_db.update_many(
                 {'chats': old_chat},
                 {"$pull": {'chats': old_chat}},
             )
 
-            await Users.chats_db.update_one(
+            await self.chats_db.update_one(
                 {'chat_id': old_chat},
                 {"$set": {'chat_id': new_chat}}
             )
@@ -81,13 +81,13 @@ class Users(plugin.Plugin):
         chat_id = message.chat.id
         user_id = message.left_chat_member.id
 
-        async with Users.lock:
-            await Users.users_db.update_one(
+        async with self.lock:
+            await self.users_db.update_one(
                 {'_id': user_id},
                 {"$pull": {'chats': chat_id}}
             )
 
-            await Users.chats_db.update_one(
+            await self.chats_db.update_one(
                 {'chat_id': chat_id},
                 {"$pull": {'member': user_id}}
             )
@@ -97,4 +97,4 @@ class Users(plugin.Plugin):
         """ Chat migrate handler """
         old_chat = message.migrate_from_chat_id
         new_chat = message.chat.id
-        await self.migrate_chat(old_chat, new_chat)
+        await self.bot.migrate_chat(old_chat, new_chat)

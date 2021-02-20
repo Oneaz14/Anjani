@@ -60,12 +60,12 @@ class Staff(plugin.Plugin):
             return
         with codecs.open(log_file, "r", encoding="utf-8") as logFile:
             data = logFile.read()
-        key = await nekobin(self, data)
+        key = await nekobin(self.bot, data)
         if key:
             url = [[
                 InlineKeyboardButton(text="View raw", url=f"https://nekobin.com/raw/{key}"),
             ]]
-            await self.send_document(
+            await self.bot.send_document(
                 message.from_user.id,
                 log_file,
                 caption="**Bot logging**",

@@ -34,14 +34,13 @@ class SpamCheck:
     spmwtc = Config.SPAMWATCH_API
     shield_db = anjani.get_collection("GBAN_SETTINGS")
 
-    @classmethod
     @pool.run_in_thread
-    def sw_check(cls, user_id: int) -> Union[Ban, None]:
+    def sw_check(self, user_id: int) -> Union[Ban, None]:
         """ Check on SpawmWatch """
-        if not cls.spmwtc:
+        if not self.spmwtc:
             LOGGER.warning("No SpamWatch API!")
             return None
-        return spamwatch.Client(cls.spmwtc).get_ban(user_id)
+        return spamwatch.Client(self.spmwtc).get_ban(user_id)
 
     @staticmethod
     async def cas_check(user_id: int) -> Union[str, bool]:
@@ -52,17 +51,15 @@ class SpamCheck:
             return "https://cas.chat/query?u={}".format(user_id)
         return False
 
-    @classmethod
-    async def chat_gban(cls, chat_id) -> bool:
+    async def chat_gban(self, chat_id) -> bool:
         """ Return Spam_Shield setting """
-        setting = await cls.shield_db.find_one({'chat_id': chat_id})
+        setting = await self.shield_db.find_one({'chat_id': chat_id})
         return setting["setting"] if setting else True
 
-    @classmethod
-    async def shield_pref(cls, chat_id, setting: bool):
+    async def shield_pref(self, chat_id, setting: bool):
         """ Turn on/off SpamShield in chats """
-        async with cls.lock:
-            await cls.shield_db.update_one(
+        async with self.lock:
+            await self.shield_db.update_one(
                 {'chat_id': chat_id},
                 {
                     "$set": {'setting': setting}
@@ -78,22 +75,22 @@ class SpamShield(plugin.Plugin, SpamCheck):
     async def shield(self, message):
         """ Check handler """
         if(
-                await SpamShield.chat_gban(message.chat.id) and
-                (await self.get_chat_member(message.chat.id, 'me')).can_restrict_members
+                await self.chat_gban(message.chat.id) and
+                (await self.bot.get_chat_member(message.chat.id, 'me')).can_restrict_members
         ):
             user = message.from_user
             chat = message.chat
-            if user and not await user_ban_protected(self, chat.id, user.id):
-                await SpamShield.check_and_ban(self, user, chat.id)
+            if user and not await user_ban_protected(chat.id, user.id):
+                await self.check_and_ban(user, chat.id)
             elif message.new_chat_members:
                 for member in message.new_chat_members:
-                    await SpamShield.check_and_ban(self, member, chat.id)
+                    await self.check_and_ban(member, chat.id)
 
     async def check_and_ban(self, user, chat_id):
         """ Shield Check users. """
         user_id = user.id
-        _cas = await SpamShield.cas_check(user_id)
-        _sw = await SpamShield.sw_check(user_id)
+        _cas = await self.cas_check(user_id)
+        _sw = await self.sw_check(user_id)
         if _cas or _sw:
             userlink = f"[{user.first_name}](tg://user?id={user_id})"
             reason = f"[link]({_cas})" if _cas else _sw.reason
@@ -101,7 +98,7 @@ class SpamShield(plugin.Plugin, SpamCheck):
                 banner = "[Combot Anti Spam](t.me/combot)"
             else:
                 banner = "[Spam Watch](t.me/SpamWatch)"
-            text = await self.text(
+            text = await self.bot.text(
                 chat_id,
                 "banned-text",
                 userlink,
@@ -110,14 +107,14 @@ class SpamShield(plugin.Plugin, SpamCheck):
                 banner
             )
             await asyncio.gather(
-                self.kick_chat_member(chat_id, user_id),
-                self.send_message(
+                self.bot.kick_chat_member(chat_id, user_id),
+                self.bot.send_message(
                     chat_id,
                     text=text,
                     parse_mode="markdown",
                     disable_web_page_preview=True,
                 ),
-                self.channel_log(
+                self.bot.channel_log(
                     "#SPAM_SHIELD LOG\n"
                     f"**User**: {userlink} banned on {chat_id}\n"
                     f"**ID**: {user_id}\n"
@@ -134,13 +131,13 @@ class SpamShield(plugin.Plugin, SpamCheck):
         if len(message.command) >= 1:
             arg = message.command[0]
             if arg.lower() in ["on", "true", "enable"]:
-                await SpamShield.shield_pref(chat_id, True)
-                await message.reply_text(await self.text(chat_id, "spamshield-set", "on"))
+                await self.shield_pref(chat_id, True)
+                await message.reply_text(await self.bot.text(chat_id, "spamshield-set", "on"))
             elif arg.lower() in ["off", "false", "disable"]:
-                await SpamShield.shield_pref(chat_id, False)
-                await message.reply_text(await self.text(chat_id, "spamshield-set", "off"))
+                await self.shield_pref(chat_id, False)
+                await message.reply_text(await self.bot.text(chat_id, "spamshield-set", "off"))
             else:
-                await message.reply_text(await self.text(chat_id, "err-invalid-option"))
+                await message.reply_text(await self.bot.text(chat_id, "err-invalid-option"))
         else:
-            setting = await SpamShield.chat_gban(message.chat.id)
-            await message.reply_text(await self.text(chat_id, "spamshield-view", setting))
+            setting = await self.chat_gban(message.chat.id)
+            await message.reply_text(await self.bot.text(chat_id, "spamshield-view", setting))
