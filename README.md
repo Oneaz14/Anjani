@@ -70,7 +70,7 @@ class PluginClass(plugin.Plugin):
 *Notes:
  - The handler function takes class instance and message.
  - You can access the bot attribute (`Anjani` instance) on `self.bot`.
- - You can access the `~pyrogram.Client` too on `self.bot.clients`
+ - You can access the `~pyrogram.Client` too on `self.bot.client`
 
 ### Another Method & Attributes
 
